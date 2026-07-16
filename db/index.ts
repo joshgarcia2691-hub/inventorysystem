@@ -10,7 +10,7 @@ export type RunResult = {
 function toPostgres(statement: string): string {
   let index = 0;
   let converted = statement.replace(/\?/g, () => `$${++index}`);
-  const insert = converted.trim().match(/^INSERT\s+INTO\s+(categories|suppliers|products|orders|order_items|stock_movements|audit_logs)\b/i);
+  const insert = converted.trim().match(/^INSERT\s+INTO\s+(categories|suppliers|products|orders|order_items|stock_movements|audit_logs|users)\b/i);
   if (insert && !/\bRETURNING\b/i.test(converted)) converted = `${converted} RETURNING id`;
   return converted;
 }

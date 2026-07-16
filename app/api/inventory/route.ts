@@ -88,6 +88,7 @@ function csvResponse(filename: string, headers: string[], rows: unknown[][]) {
 export async function GET(request: Request) {
   const actor = await getRequestActor();
   if (!actor) return Response.json({ error: "Authentication required" }, { status: 401 });
+  if (actor.role !== "admin") return Response.json({ error: "Administrator access required" }, { status: 403 });
 
   try {
     const db = await ensureDatabase();
@@ -100,7 +101,7 @@ export async function GET(request: Request) {
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
         LEFT JOIN suppliers s ON s.id = p.supplier_id ORDER BY p.name`);
       return csvResponse(
-        "stockwise-products.csv",
+        "rk-empires-products.csv",
         ["SKU", "Barcode", "Name", "Description", "Category", "Supplier", "Location", "Unit", "Cost", "Price", "Stock", "Reorder point", "Status"],
         rows.map((row) => [row.sku, row.barcode, row.name, row.description, row.category, row.supplier, row.location, row.unit, Number(row.cost_cents) / 100, Number(row.price_cents) / 100, row.stock, row.reorder_point, row.status]),
       );
@@ -112,7 +113,7 @@ export async function GET(request: Request) {
         m.reference, m.note, m.created_by FROM stock_movements m
         JOIN products p ON p.id = m.product_id ORDER BY m.id DESC`);
       return csvResponse(
-        "stockwise-movements.csv",
+        "rk-empires-movements.csv",
         ["Date", "SKU", "Product", "Type", "Change", "Before", "After", "Reference", "Note", "Created by"],
         rows.map((row) => [row.created_at, row.sku, row.name, row.type, row.quantity, row.before_stock, row.after_stock, row.reference, row.note, row.created_by]),
       );
@@ -127,6 +128,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const actor = await getRequestActor();
   if (!actor) return Response.json({ error: "Authentication required" }, { status: 401 });
+  if (actor.role !== "admin") return Response.json({ error: "Administrator access required" }, { status: 403 });
 
   try {
     const db = await ensureDatabase();

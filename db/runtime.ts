@@ -75,6 +75,23 @@ const schemaStatements = [
     value TEXT NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'customer')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'disabled')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS audit_logs (
     id SERIAL PRIMARY KEY,
     actor TEXT NOT NULL,
@@ -91,11 +108,16 @@ const schemaStatements = [
   "CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items(order_id)",
   "CREATE INDEX IF NOT EXISTS movements_product_idx ON stock_movements(product_id)",
   "CREATE INDEX IF NOT EXISTS movements_created_idx ON stock_movements(created_at)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users(lower(email))",
+  "CREATE UNIQUE INDEX IF NOT EXISTS users_single_admin_idx ON users(role) WHERE role='admin'",
+  "CREATE INDEX IF NOT EXISTS users_role_idx ON users(role)",
+  "CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions(user_id)",
+  "CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expires_at)",
   "CREATE INDEX IF NOT EXISTS audit_created_idx ON audit_logs(created_at)",
 ];
 
 const seedStatements = [
-  "INSERT INTO settings (key, value) VALUES ('business_name', 'StockWise') ON CONFLICT (key) DO NOTHING",
+  "INSERT INTO settings (key, value) VALUES ('business_name', 'RK Empires Inventory') ON CONFLICT (key) DO NOTHING",
   "INSERT INTO settings (key, value) VALUES ('currency', 'USD') ON CONFLICT (key) DO NOTHING",
   "INSERT INTO settings (key, value) VALUES ('date_format', 'MMM d, yyyy') ON CONFLICT (key) DO NOTHING",
   "INSERT INTO categories (id, name, color) VALUES (1, 'Electronics', '#5b6cf9') ON CONFLICT DO NOTHING",
@@ -120,9 +142,10 @@ const seedStatements = [
   `INSERT INTO audit_logs (actor, action, entity_type, entity_id, details)
    SELECT 'system', 'initialized', 'workspace', '1', 'Starter inventory created'
    WHERE NOT EXISTS (SELECT 1 FROM audit_logs)`,
+  "UPDATE settings SET value='RK Empires Inventory', updated_at=CURRENT_TIMESTAMP WHERE key='business_name' AND value='StockWise'",
 ];
 
-const sequenceStatements = ["categories", "suppliers", "products", "orders", "order_items", "stock_movements", "audit_logs"]
+const sequenceStatements = ["categories", "suppliers", "products", "orders", "order_items", "stock_movements", "audit_logs", "users"]
   .map((table) => `SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1), true)`);
 
 export async function ensureDatabase(): Promise<Database> {

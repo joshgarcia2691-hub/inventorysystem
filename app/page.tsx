@@ -1,8 +1,13 @@
+import AuthGateway from "./AuthGateway";
+import CustomerPortal from "./CustomerPortal";
 import InventoryApp from "./InventoryApp";
+import { getCurrentUser, isAdminSetupRequired } from "./lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const deployed = Boolean(process.env.VERCEL);
-  return <InventoryApp user={{ displayName: deployed ? "Vercel workspace user" : "Local Admin", email: deployed ? "Protected deployment" : "local-admin@stockwise.test" }} />;
+export default async function Home() {
+  const user = await getCurrentUser();
+  if (!user) return <AuthGateway adminSetupRequired={await isAdminSetupRequired()} />;
+  if (user.role === "customer") return <CustomerPortal user={user} />;
+  return <InventoryApp user={user} />;
 }
