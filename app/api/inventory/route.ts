@@ -1,7 +1,9 @@
 import { ensureDatabase } from "../../../db/runtime";
+import type { Database, PreparedStatement } from "../../../db";
 import { getRequestActor } from "../../lib/auth";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -28,12 +30,14 @@ function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "Unexpected error";
   const safeMessage = message.includes("UNIQUE constraint failed")
     ? "That SKU or name is already in use."
-    : message;
+    : message.includes("duplicate key value violates unique constraint")
+      ? "That SKU or name is already in use."
+      : message;
   return Response.json({ error: safeMessage }, { status: 400 });
 }
 
 async function queryAll<T>(
-  db: D1Database,
+  db: Database,
   statement: string,
   ...values: unknown[]
 ): Promise<T[]> {
@@ -41,7 +45,7 @@ async function queryAll<T>(
   return result.results ?? [];
 }
 
-async function loadWorkspace(db: D1Database) {
+async function loadWorkspace(db: Database) {
   const [products, suppliers, categories, movements, orders, settingsRows, audit] =
     await Promise.all([
       queryAll(db, `SELECT p.*, c.name AS category_name, c.color AS category_color,
@@ -49,9 +53,9 @@ async function loadWorkspace(db: D1Database) {
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
         LEFT JOIN suppliers s ON s.id = p.supplier_id
-        ORDER BY CASE p.status WHEN 'active' THEN 0 ELSE 1 END, p.name COLLATE NOCASE`),
-      queryAll(db, "SELECT * FROM suppliers ORDER BY name COLLATE NOCASE"),
-      queryAll(db, "SELECT * FROM categories ORDER BY name COLLATE NOCASE"),
+        ORDER BY CASE p.status WHEN 'active' THEN 0 ELSE 1 END, lower(p.name)`),
+      queryAll(db, "SELECT * FROM suppliers ORDER BY lower(name)"),
+      queryAll(db, "SELECT * FROM categories ORDER BY lower(name)"),
       queryAll(db, `SELECT m.*, p.name AS product_name, p.sku
         FROM stock_movements m JOIN products p ON p.id = m.product_id
         ORDER BY m.id DESC LIMIT 250`),
@@ -287,7 +291,7 @@ export async function POST(request: Request) {
         VALUES (?, ?, ?, 'completed', ?, ?, ?)`)
         .bind(orderNumber, type, text(body.counterparty, 180), total, text(body.note, 500), actor.email).run();
       const orderId = Number(order.meta.last_row_id);
-      const statements: D1PreparedStatement[] = [];
+      const statements: PreparedStatement[] = [];
       for (const item of normalized) {
         const delta = item.after - item.before;
         statements.push(

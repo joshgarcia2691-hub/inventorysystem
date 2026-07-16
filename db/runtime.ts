@@ -1,27 +1,27 @@
-import { getRawDb } from "./index";
+import { Database, getDatabase } from "./index";
 
 let initialization: Promise<void> | null = null;
 
 const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     color TEXT NOT NULL DEFAULT '#64748b',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS suppliers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     contact_name TEXT NOT NULL DEFAULT '',
     email TEXT NOT NULL DEFAULT '',
     phone TEXT NOT NULL DEFAULT '',
     address TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     sku TEXT NOT NULL UNIQUE,
     barcode TEXT NOT NULL DEFAULT '',
     name TEXT NOT NULL,
@@ -35,11 +35,11 @@ const schemaStatements = [
     stock INTEGER NOT NULL DEFAULT 0,
     reorder_point INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'active',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_number TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL,
     counterparty TEXT NOT NULL DEFAULT '',
@@ -47,10 +47,10 @@ const schemaStatements = [
     total_cents INTEGER NOT NULL DEFAULT 0,
     note TEXT NOT NULL DEFAULT '',
     created_by TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS order_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id),
     product_id INTEGER NOT NULL REFERENCES products(id),
     quantity INTEGER NOT NULL,
@@ -58,7 +58,7 @@ const schemaStatements = [
     subtotal_cents INTEGER NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS stock_movements (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id),
     type TEXT NOT NULL,
     quantity INTEGER NOT NULL,
@@ -68,21 +68,21 @@ const schemaStatements = [
     note TEXT NOT NULL DEFAULT '',
     unit_cost_cents INTEGER NOT NULL DEFAULT 0,
     created_by TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS audit_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     actor TEXT NOT NULL,
     action TEXT NOT NULL,
     entity_type TEXT NOT NULL,
     entity_id TEXT NOT NULL DEFAULT '',
     details TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   "CREATE INDEX IF NOT EXISTS products_status_idx ON products(status)",
   "CREATE INDEX IF NOT EXISTS products_category_idx ON products(category_id)",
@@ -95,39 +95,43 @@ const schemaStatements = [
 ];
 
 const seedStatements = [
-  "INSERT OR IGNORE INTO settings (key, value) VALUES ('business_name', 'StockWise')",
-  "INSERT OR IGNORE INTO settings (key, value) VALUES ('currency', 'USD')",
-  "INSERT OR IGNORE INTO settings (key, value) VALUES ('date_format', 'MMM d, yyyy')",
-  "INSERT OR IGNORE INTO categories (id, name, color) VALUES (1, 'Electronics', '#5b6cf9')",
-  "INSERT OR IGNORE INTO categories (id, name, color) VALUES (2, 'Packaging', '#f59e0b')",
-  "INSERT OR IGNORE INTO categories (id, name, color) VALUES (3, 'Office', '#10b981')",
-  `INSERT OR IGNORE INTO suppliers (id, name, contact_name, email, phone, address)
-   VALUES (1, 'Northstar Supply Co.', 'Maya Chen', 'orders@northstar.example', '+1 555 0147', '18 Harbor Way')`,
-  `INSERT OR IGNORE INTO suppliers (id, name, contact_name, email, phone, address)
-   VALUES (2, 'PackRight Wholesale', 'Noah Santos', 'sales@packright.example', '+1 555 0184', '402 Market Street')`,
-  `INSERT OR IGNORE INTO products
+  "INSERT INTO settings (key, value) VALUES ('business_name', 'StockWise') ON CONFLICT (key) DO NOTHING",
+  "INSERT INTO settings (key, value) VALUES ('currency', 'USD') ON CONFLICT (key) DO NOTHING",
+  "INSERT INTO settings (key, value) VALUES ('date_format', 'MMM d, yyyy') ON CONFLICT (key) DO NOTHING",
+  "INSERT INTO categories (id, name, color) VALUES (1, 'Electronics', '#5b6cf9') ON CONFLICT DO NOTHING",
+  "INSERT INTO categories (id, name, color) VALUES (2, 'Packaging', '#f59e0b') ON CONFLICT DO NOTHING",
+  "INSERT INTO categories (id, name, color) VALUES (3, 'Office', '#10b981') ON CONFLICT DO NOTHING",
+  `INSERT INTO suppliers (id, name, contact_name, email, phone, address)
+   VALUES (1, 'Northstar Supply Co.', 'Maya Chen', 'orders@northstar.example', '+1 555 0147', '18 Harbor Way') ON CONFLICT DO NOTHING`,
+  `INSERT INTO suppliers (id, name, contact_name, email, phone, address)
+   VALUES (2, 'PackRight Wholesale', 'Noah Santos', 'sales@packright.example', '+1 555 0184', '402 Market Street') ON CONFLICT DO NOTHING`,
+  `INSERT INTO products
     (id, sku, barcode, name, description, category_id, supplier_id, location, unit, cost_cents, price_cents, stock, reorder_point)
-   VALUES (1, 'SCN-1001', '890123450001', 'Wireless barcode scanner', 'Rechargeable 2.4 GHz handheld scanner', 1, 1, 'A-01-02', 'each', 4850, 7900, 26, 8)`,
-  `INSERT OR IGNORE INTO products
+   VALUES (1, 'SCN-1001', '890123450001', 'Wireless barcode scanner', 'Rechargeable 2.4 GHz handheld scanner', 1, 1, 'A-01-02', 'each', 4850, 7900, 26, 8) ON CONFLICT DO NOTHING`,
+  `INSERT INTO products
     (id, sku, barcode, name, description, category_id, supplier_id, location, unit, cost_cents, price_cents, stock, reorder_point)
-   VALUES (2, 'LBL-2040', '890123450002', 'Thermal label roll 4 × 6', 'Perforated direct-thermal shipping labels', 2, 2, 'B-03-01', 'roll', 620, 1100, 7, 12)`,
-  `INSERT OR IGNORE INTO products
+   VALUES (2, 'LBL-2040', '890123450002', 'Thermal label roll 4 x 6', 'Perforated direct-thermal shipping labels', 2, 2, 'B-03-01', 'roll', 620, 1100, 7, 12) ON CONFLICT DO NOTHING`,
+  `INSERT INTO products
     (id, sku, barcode, name, description, category_id, supplier_id, location, unit, cost_cents, price_cents, stock, reorder_point)
-   VALUES (3, 'TAP-4810', '890123450003', 'Heavy-duty packing tape', 'Clear acrylic carton-sealing tape', 2, 2, 'B-02-04', 'roll', 180, 350, 64, 20)`,
-  `INSERT OR IGNORE INTO products
+   VALUES (3, 'TAP-4810', '890123450003', 'Heavy-duty packing tape', 'Clear acrylic carton-sealing tape', 2, 2, 'B-02-04', 'roll', 180, 350, 64, 20) ON CONFLICT DO NOTHING`,
+  `INSERT INTO products
     (id, sku, barcode, name, description, category_id, supplier_id, location, unit, cost_cents, price_cents, stock, reorder_point)
-   VALUES (4, 'PAP-A480', '890123450004', 'A4 copy paper 80 gsm', '500-sheet multipurpose paper ream', 3, 1, 'C-01-03', 'ream', 390, 625, 18, 10)`,
+   VALUES (4, 'PAP-A480', '890123450004', 'A4 copy paper 80 gsm', '500-sheet multipurpose paper ream', 3, 1, 'C-01-03', 'ream', 390, 625, 18, 10) ON CONFLICT DO NOTHING`,
   `INSERT INTO audit_logs (actor, action, entity_type, entity_id, details)
    SELECT 'system', 'initialized', 'workspace', '1', 'Starter inventory created'
    WHERE NOT EXISTS (SELECT 1 FROM audit_logs)`,
 ];
 
-export async function ensureDatabase(): Promise<D1Database> {
-  const db = getRawDb();
+const sequenceStatements = ["categories", "suppliers", "products", "orders", "order_items", "stock_movements", "audit_logs"]
+  .map((table) => `SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1), true)`);
+
+export async function ensureDatabase(): Promise<Database> {
+  const db = getDatabase();
   if (!initialization) {
     initialization = (async () => {
       await db.batch(schemaStatements.map((statement) => db.prepare(statement)));
       await db.batch(seedStatements.map((statement) => db.prepare(statement)));
+      await db.batch(sequenceStatements.map((statement) => db.prepare(statement)));
     })().catch((error) => {
       initialization = null;
       throw error;
