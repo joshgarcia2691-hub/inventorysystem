@@ -11,7 +11,7 @@ export type RequestActor = {
   role: UserRole;
 };
 
-const SESSION_COOKIE = "rk_empires_session";
+const SESSION_COOKIE = "the_zaza_club_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 export function normalizeEmail(value: unknown): string {

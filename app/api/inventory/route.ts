@@ -101,7 +101,7 @@ export async function GET(request: Request) {
         FROM products p LEFT JOIN categories c ON c.id = p.category_id
         LEFT JOIN suppliers s ON s.id = p.supplier_id ORDER BY p.name`);
       return csvResponse(
-        "rk-empires-products.csv",
+        "the-zaza-club-products.csv",
         ["SKU", "Barcode", "Name", "Description", "Category", "Supplier", "Location", "Unit", "Cost", "Price", "Stock", "Reorder point", "Status"],
         rows.map((row) => [row.sku, row.barcode, row.name, row.description, row.category, row.supplier, row.location, row.unit, Number(row.cost_cents) / 100, Number(row.price_cents) / 100, row.stock, row.reorder_point, row.status]),
       );
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
         m.reference, m.note, m.created_by FROM stock_movements m
         JOIN products p ON p.id = m.product_id ORDER BY m.id DESC`);
       return csvResponse(
-        "rk-empires-movements.csv",
+        "the-zaza-club-movements.csv",
         ["Date", "SKU", "Product", "Type", "Change", "Before", "After", "Reference", "Note", "Created by"],
         rows.map((row) => [row.created_at, row.sku, row.name, row.type, row.quantity, row.before_stock, row.after_stock, row.reference, row.note, row.created_by]),
       );

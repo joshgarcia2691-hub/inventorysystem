@@ -1,6 +1,6 @@
-# RK Empires Inventory System
+# The Zaza Club Inventory System
 
-RK Empires Inventory is a responsive, full-stack inventory platform with separate administrator and customer portals. Administrators control products, stock, suppliers, orders, reporting, imports, exports, settings, and audit history. Customers can create an account, browse live inventory, manage a cart, place orders, and review their order history.
+The Zaza Club Inventory is a responsive, full-stack inventory platform with separate administrator and customer portals. Administrators control products, stock, suppliers, orders, reporting, imports, exports, settings, and audit history. Customers can create an account, browse live inventory, manage a cart, place orders, and review their order history.
 
 ## Account access
 
@@ -32,16 +32,18 @@ After a fresh deployment, choose **Administrator** and create the first admin ac
 - Automatic sales order, order-item, movement, and audit records
 - Personal order history linked to the signed-in customer
 
-## RK Empires brand system
+## The Zaza Club brand system
 
-- Primary gold `#D4AF37`
-- Deep gold `#B8860B`
+- Club lime `#B7F16F`
+- Deep lime `#7FB83D`
+- Soft rose `#F2B8A2`
+- Purple `#9B5DE5`
 - White `#FFFFFF`
-- Light gray `#E6E6E6`
-- Dark gray `#1A1A1A`
-- Black `#000000`
-- Playfair Display for headings and Montserrat for interface text
-- Official RK Empires logo and the “Automate · Innovate · Elevate” message
+- Soft gray `#F6F7F3`
+- Charcoal `#191F1D`
+- Near-black `#050706`
+- Bebas Neue for headings and Montserrat for interface text
+- Official The Zaza Club logo with a bold, colorful, club-forward interface
 
 ## Technology
 
@@ -95,7 +97,7 @@ sku,name,barcode,location,unit,cost,price,stock,reorder_point
 
 ## Vercel deployment
 
-The linked Vercel project is `rk-empires-projects/inventorysystem`. Connect Neon, make sure `DATABASE_URL` is available to the deployment, then deploy:
+The linked Vercel project is `rk-empires-projects/inventorysystem`. Make sure `DATABASE_URL` is available to the deployment, then deploy:
 
 ```bash
 npx vercel

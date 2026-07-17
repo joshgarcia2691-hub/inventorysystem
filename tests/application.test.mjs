@@ -4,7 +4,7 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("ships the finished RK Empires application with role-based entry", async () => {
+test("ships the finished The Zaza Club application with role-based entry", async () => {
   const [page, layout, app, auth, customer] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
@@ -16,7 +16,7 @@ test("ships the finished RK Empires application with role-based entry", async ()
   assert.match(page, /InventoryApp/);
   assert.match(page, /AuthGateway/);
   assert.match(page, /CustomerPortal/);
-  assert.match(layout, /RK Empires Inventory/);
+  assert.match(layout, /The Zaza Club Inventory/);
   assert.match(auth, /Customer/);
   assert.match(auth, /Administrator/);
   assert.match(auth, /Create customer account/);

@@ -42,23 +42,23 @@ export default function AuthGateway({ adminSetupRequired }: { adminSetupRequired
   }
 
   return <main className="auth-page">
-    <section className="auth-brand-panel" aria-label="RK Empires brand introduction">
+    <section className="auth-brand-panel" aria-label="The Zaza Club brand introduction">
       <div className="auth-brand-glow" />
       <div className="auth-brand-content">
-        <Image className="auth-logo" src="/rk-empires-logo.jpeg" alt="RK Empires Intelligent Automations" width={260} height={260} priority />
-        <p className="auth-kicker"><Sparkles size={15} />Intelligent inventory operations</p>
-        <h1>Automate.<br />Innovate. <span>Elevate.</span></h1>
-        <p className="auth-brand-copy">A secure inventory command center for your team and a streamlined ordering experience for your customers.</p>
-        <div className="auth-values"><span>Smart & connected</span><span>Secure & reliable</span><span>Built to scale</span></div>
+        <Image className="auth-logo" src="/the-zaza-club-logo.jpeg" alt="The Zaza Club" width={260} height={260} priority />
+        <p className="auth-kicker"><Sparkles size={15} />Private inventory + ordering</p>
+        <h1>Stock the club.<br /><span>Serve every order.</span></h1>
+        <p className="auth-brand-copy">One connected workspace for live inventory, purchasing, customer orders, and dependable stock visibility.</p>
+        <div className="auth-values"><span>Fresh stock visibility</span><span>Fast fulfillment</span><span>Built for the club</span></div>
       </div>
-      <footer>RK Empires Intelligent Automations</footer>
+      <footer>The Zaza Club · Inventory Operations</footer>
     </section>
 
     <section className="auth-access-panel">
       <div className="auth-card">
         <div className="auth-card-head">
           <p className="gold-eyebrow">Secure portal access</p>
-          <h2>Welcome to RK Empires</h2>
+          <h2>Welcome to The Zaza Club</h2>
           <p>Choose your portal, then sign in to continue.</p>
         </div>
 
